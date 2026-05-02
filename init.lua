@@ -541,7 +541,7 @@ require('lazy').setup({
         clangd = {},
         gopls = {},
         -- pyright = {},
-        -- rust_analyzer = {},
+        rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -550,6 +550,13 @@ require('lazy').setup({
         -- But for many setups, the LSP (`tsserver`) will work just fine
         tsserver = {},
         --
+
+        asm_lsp = {
+          filetypes = { 'asm', 'nasm' },
+          root_dir = function(fname)
+            return require('lspconfig.util').root_pattern('.asm-lsp.toml', '.git')(fname) or vim.fn.getcwd()
+          end,
+        },
 
         lua_ls = {
           -- cmd = {...},
@@ -612,26 +619,32 @@ require('lazy').setup({
       },
     },
     opts = {
-      notify_on_error = false,
+      notify_on_error = true,
+
       format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
         local disable_filetypes = { cpp = true }
-        -- local disable_filetypes = { c = true, cpp = true }
         return {
-          timeout_ms = 500,
+          timeout_ms = 1000,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
         }
       end,
+
       formatters_by_ft = {
         lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use a sub-list to tell conform to run *until* a formatter
-        -- is found.
+
+        -- NASM / x86_64 assembly
+        asm = { 'nasmfmt' },
+        nasm = { 'nasmfmt' },
+
         javascript = { { 'prettierd', 'prettier' } },
+      },
+
+      formatters = {
+        nasmfmt = {
+          command = 'nasmfmt',
+          args = { '$FILENAME' },
+          stdin = false,
+        },
       },
     },
   },
